@@ -1,0 +1,51 @@
+services:
+  cockroach:
+    image: cockroachdb/cockroach:v24.3.6
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    networks:
+      - app-network
+    healthcheck: 
+      test: ["CMD", "cockroach", "sql", "--insecure", "--execute=SELECT 1"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../backend/Dockerfile
+    ports:
+      - "8081:8080"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      cockroach:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - ./backend:/app
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: ../frontend/Dockerfile
+  #   ports:
+  #     - "8082:80"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - app-network
+
+volumes:
+  cockroach-data:
+
+networks:
+  app-network:
+    driver: bridge
