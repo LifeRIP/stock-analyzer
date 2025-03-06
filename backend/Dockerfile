@@ -23,7 +23,7 @@ RUN go mod download
 # COPY --from=builder /app/backend .
 
 # Exponer el puerto
-EXPOSE 8080
+EXPOSE 8081
 
 # Ejecutar la aplicación
 CMD ["air", "-c", ".air.toml"]

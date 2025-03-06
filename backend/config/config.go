@@ -1,11 +1,14 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/fx"
 )
+
+// Module proporciona las dependencias de la configuración
+var Module = fx.Provide(LoadConfig)
 
 // Config contiene la configuración de la aplicación
 type Config struct {
@@ -20,8 +23,6 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	// Cargar variables de entorno desde .env si existe
 	_ = godotenv.Load()
-
-	log.Println(os.Getenv("DATABASE_URL"))
 
 	return &Config{
 		DatabaseURL: getEnv("DATABASE_URL", "postgresql://root@localhost:26257/defaultdb?sslmode=disable"),
