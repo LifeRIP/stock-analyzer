@@ -70,18 +70,18 @@ func register(
 			}()
 
 			// Sincronizar stocks al inicio (opcional)
-			go func() {
-				logger.Info("Sincronizando stocks desde la API...")
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-				defer cancel()
+			// go func() {
+			// 	logger.Info("Sincronizando stocks desde la API...")
+			// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			// 	defer cancel()
 
-				count, err := stockService.SyncStocksFromAPI(ctx)
-				if err != nil {
-					logger.Error("Error al sincronizar stocks", zap.Error(err))
-				} else {
-					logger.Info("Sincronización completada", zap.Int("count", count))
-				}
-			}()
+			// 	count, err := stockService.SyncStocksFromAPI(ctx)
+			// 	if err != nil {
+			// 		logger.Error("Error al sincronizar stocks", zap.Error(err))
+			// 	} else {
+			// 		logger.Info("Sincronización completada", zap.Int("count", count))
+			// 	}
+			// }()
 
 			return nil
 		},

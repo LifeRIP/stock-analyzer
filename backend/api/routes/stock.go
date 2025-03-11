@@ -12,10 +12,12 @@ import (
 
 // RegisterStockRoutes registra las rutas relacionadas con stocks
 func RegisterStockRoutes(router *mux.Router, stockHandler *handlers.StockHandler) {
+	// Obtener nombre del archivo actual
+
 	// Rutas para stocks
-	router.HandleFunc("/stocks", stockHandler.GetStocks).Methods(http.MethodGet)
-	router.HandleFunc("/recommendations", stockHandler.GetRecommendations).Methods(http.MethodGet)
-	router.HandleFunc("/sync", stockHandler.SyncStocks).Methods(http.MethodPost)
+	router.HandleFunc("/stock", stockHandler.GetStocks).Methods(http.MethodGet)
+	router.HandleFunc("/stock/recommendations", stockHandler.GetRecommendations).Methods(http.MethodGet)
+	router.HandleFunc("/stock/sync", stockHandler.SyncStocks).Methods(http.MethodPost)
 }
 
 // Module proporciona las dependencias de las rutas

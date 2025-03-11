@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 
 	"github.com/liferip/stock-analyzer/backend/config"
 	"github.com/liferip/stock-analyzer/backend/internal/models"
@@ -20,16 +21,18 @@ type StockClient struct {
 	BaseURL    string
 	APIKey     string
 	HTTPClient *http.Client
+	logger     *zap.Logger
 }
 
 // NewStockClient crea un nuevo cliente para la API de stocks
-func NewStockClient(cfg *config.Config) *StockClient {
+func NewStockClient(cfg *config.Config, logger *zap.Logger) *StockClient {
 	return &StockClient{
 		BaseURL: cfg.APIEndpoint,
 		APIKey:  cfg.APIKey,
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		logger: logger.Named("stock_client"),
 	}
 }
 
@@ -48,20 +51,43 @@ func (c *StockClient) GetStocks(nextPage string) (*models.StockResponse, error) 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.APIKey))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error al realizar la solicitud a la API externa: %w", err)
-	}
-	defer resp.Body.Close()
+	maxIntentos := 3
+	var lastErr error
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("la API respondió con código de estado %d", resp.StatusCode)
-	}
+	for i := 1; i <= maxIntentos; i++ {
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("error al realizar la solicitud a la API externa (intento %d/%d): %w",
+				i, maxIntentos, err)
 
-	var stockResponse models.StockResponse
-	if err := json.NewDecoder(resp.Body).Decode(&stockResponse); err != nil {
-		return nil, fmt.Errorf("error al decodificar la respuesta de la API: %w", err)
-	}
+			return nil, lastErr
+		}
+		defer resp.Body.Close()
 
-	return &stockResponse, nil
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("la API respondió con código de estado %d (intento %d/%d)",
+				resp.StatusCode, i, maxIntentos)
+
+			// Reintentar si la API externa responde con un error
+			if i < maxIntentos {
+				c.logger.Warn("Reintentando en 5 segundos...",
+					zap.Int("intento", i),
+					zap.Int("max_intentos", maxIntentos),
+					zap.Error(lastErr))
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			return nil, lastErr
+		}
+
+		var stockResponse models.StockResponse
+		if err := json.NewDecoder(resp.Body).Decode(&stockResponse); err != nil {
+			lastErr = fmt.Errorf("error al decodificar la respuesta de la API (intento %d/%d): %w",
+				i, maxIntentos, err)
+			return nil, lastErr
+		}
+
+		return &stockResponse, nil
+	}
+	return nil, fmt.Errorf("error inesperado después de %d intentos", maxIntentos)
 }
