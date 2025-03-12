@@ -47,7 +47,7 @@ func Sync(logger *zap.Logger) {
 	if err := logger.Sync(); err != nil {
 		// Ignorar errores de sincronización en stdout/stderr
 		if err.Error() != "sync /dev/stdout: invalid argument" {
-			os.Stderr.WriteString("Error al sincronizar logger: " + err.Error() + "\n")
+			os.Stderr.WriteString("Error synchronizing logger: " + err.Error() + "\n")
 		}
 	}
 }

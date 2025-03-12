@@ -45,34 +45,34 @@ func (c *StockClient) GetStocks(nextPage string) (*models.StockResponse, error) 
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error al crear la solicitud a la API externa: %w", err)
+		return nil, fmt.Errorf("error creating request to external API: %w", err)
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.APIKey))
 	req.Header.Set("Content-Type", "application/json")
 
-	maxIntentos := 3
+	maxAttempts := 5
 	var lastErr error
 
-	for i := 1; i <= maxIntentos; i++ {
+	for i := 1; i <= maxAttempts; i++ {
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
-			lastErr = fmt.Errorf("error al realizar la solicitud a la API externa (intento %d/%d): %w",
-				i, maxIntentos, err)
+			lastErr = fmt.Errorf("error making request to external API (attempt %d/%d): %w",
+				i, maxAttempts, err)
 
 			return nil, lastErr
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			lastErr = fmt.Errorf("la API respondió con código de estado %d (intento %d/%d)",
-				resp.StatusCode, i, maxIntentos)
+			lastErr = fmt.Errorf("error external API responded with a status code%d (attempt %d/%d)",
+				resp.StatusCode, i, maxAttempts)
 
 			// Reintentar si la API externa responde con un error
-			if i < maxIntentos {
-				c.logger.Warn("Reintentando en 5 segundos...",
-					zap.Int("intento", i),
-					zap.Int("max_intentos", maxIntentos),
+			if i < maxAttempts {
+				c.logger.Warn("Retrying in 5 seconds...",
+					zap.Int("attempt", i),
+					zap.Int("max_attempts", maxAttempts),
 					zap.Error(lastErr))
 				time.Sleep(5 * time.Second)
 				continue
@@ -82,12 +82,12 @@ func (c *StockClient) GetStocks(nextPage string) (*models.StockResponse, error) 
 
 		var stockResponse models.StockResponse
 		if err := json.NewDecoder(resp.Body).Decode(&stockResponse); err != nil {
-			lastErr = fmt.Errorf("error al decodificar la respuesta de la API (intento %d/%d): %w",
-				i, maxIntentos, err)
+			lastErr = fmt.Errorf("error decoding API response (attempt %d/%d): %w",
+				i, maxAttempts, err)
 			return nil, lastErr
 		}
 
 		return &stockResponse, nil
 	}
-	return nil, fmt.Errorf("error inesperado después de %d intentos", maxIntentos)
+	return nil, fmt.Errorf("Unexpected error after %d attempts", maxAttempts)
 }

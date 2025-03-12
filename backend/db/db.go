@@ -31,13 +31,13 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	// Conectar a la base de datos
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), gormConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error al conectar a la base de datos: %w", err)
+		return nil, fmt.Errorf("error connecting to the database: %w", err)
 	}
 
 	// Configurar el pool de conexiones
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("error al obtener la conexión SQL: %w", err)
+		return nil, fmt.Errorf("error getting SQL connection: %w", err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
@@ -45,10 +45,10 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 
 	// Migrar el esquema
 	if err := migrateSchema(db); err != nil {
-		return nil, fmt.Errorf("error al migrar el esquema: %w", err)
+		return nil, fmt.Errorf("error migrating schema: %w", err)
 	}
 
-	log.Println("Conexión a la base de datos establecida correctamente")
+	log.Println("Connection to the database established successfully")
 	return db, nil
 }
 

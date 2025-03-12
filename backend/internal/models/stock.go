@@ -23,7 +23,7 @@ type Stock struct {
 	UpdatedAt  time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
-// BeforeCreate se ejecuta antes de crear un registro
+// Hook BeforeCreate se ejecuta antes de crear un registro
 func (s *Stock) BeforeCreate(tx *gorm.DB) (err error) {
 	if s.ID == "" {
 		s.ID = uuid.New().String()
@@ -52,8 +52,8 @@ type StockItem struct {
 
 // StockRecommendation representa una recomendación de inversión
 type StockRecommendation struct {
-	Stock       Stock   `json:"stock"`
-	Score       float64 `json:"score"`
-	Reason      string  `json:"reason"`
-	PotentialUp float64 `json:"potential_up,omitempty"`
+	Stock       Stock    `json:"stock"`
+	Score       float64  `json:"score"`
+	Reason      []string `json:"reasons"`
+	PotentialUp float64  `json:"potential_up,omitempty"`
 }
