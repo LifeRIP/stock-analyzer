@@ -60,6 +60,7 @@ func (s *stockService) GetStockByTicker(ctx context.Context, ticker string) (*mo
 
 // SyncStocksFromAPI sincroniza los stocks desde la API externa
 func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
+	timeStart := time.Now()
 	var nextPage string
 	var count int
 
@@ -98,7 +99,7 @@ func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
 			}
 
 			// Verificar si ya existe
-			existing, err := s.repo.GetByTicker(ctx, item.Ticker)
+			existing, err := s.repo.GetByTickerSimple(ctx, item.Ticker)
 			if err != nil {
 				s.logger.Error("Error checking existing stock",
 					zap.String("ticker", item.Ticker),
@@ -144,7 +145,7 @@ func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
 		//time.Sleep(1 * time.Second)
 	}
 
-	s.logger.Info("Synchronization completed", zap.Int("count", count))
+	s.logger.Info("Synchronization completed", zap.Int("count", count), zap.Duration("duration", time.Since(timeStart)))
 	return count, nil
 }
 

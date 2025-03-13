@@ -7,6 +7,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
+	"github.com/gorilla/mux"
 	"github.com/liferip/stock-analyzer/backend/internal/models"
 	"github.com/liferip/stock-analyzer/backend/internal/service"
 )
@@ -42,8 +43,38 @@ func (h *StockHandler) GetStocks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Si no se encontraron stocks, responder con un error
+	if len(stocks) == 0 {
+		respondWithError(w, http.StatusNotFound, "No stocks found")
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"items": stocks,
+	})
+}
+
+// GetStockByTicker maneja la solicitud para obtener un stock por su ticker
+func (h *StockHandler) GetStockByTicker(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ticker := mux.Vars(r)["ticker"]
+
+	stock, err := h.stockService.GetStockByTicker(ctx, ticker)
+	if err != nil {
+		h.logger.Error("Error getting stock by ticker", zap.Error(err))
+		respondWithError(w, http.StatusInternalServerError, "Error getting stock by ticker")
+		return
+	}
+
+	// Si no se encontró el stock, responder con un error
+	if stock == nil {
+		respondWithError(w, http.StatusNotFound, "Stock not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"item": stock,
 	})
 }
 
@@ -73,6 +104,12 @@ func (h *StockHandler) GetRecommendations(w http.ResponseWriter, r *http.Request
 			respondWithError(w, http.StatusInternalServerError, "Error getting recommendations by time")
 			return
 		}
+	}
+
+	// Si no se encontraron recomendaciones, responder con un error
+	if len(recommendations) == 0 {
+		respondWithError(w, http.StatusNotFound, "No recommendations found")
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, recommendations)

@@ -19,6 +19,7 @@ type StockRepository interface {
 	GetAll(ctx context.Context) ([]models.Stock, error)
 	GetAllByTime(ctx context.Context, time string) ([]models.Stock, error)
 	GetByTicker(ctx context.Context, ticker string) (*models.Stock, error)
+	GetByTickerSimple(ctx context.Context, ticker string) (*models.Stock, error)
 	Create(ctx context.Context, stock *models.Stock) error
 	Update(ctx context.Context, stock *models.Stock) error
 	Delete(ctx context.Context, id string) error
@@ -59,6 +60,29 @@ func (r *stockRepository) GetByTicker(ctx context.Context, ticker string) (*mode
 	var stock models.Stock
 
 	result := r.db.WithContext(ctx).
+		Where("ticker = ?", ticker).
+		Order("time DESC").
+		First(&stock)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		r.logger.Error("Error getting stock by ticker",
+			zap.String("ticker", ticker),
+			zap.Error(result.Error))
+		return nil, result.Error
+	}
+
+	return &stock, nil
+}
+
+// GetByTickerSimple obtiene el time e ID de una stock por su ticker
+func (r *stockRepository) GetByTickerSimple(ctx context.Context, ticker string) (*models.Stock, error) {
+	var stock models.Stock
+
+	result := r.db.WithContext(ctx).
+		Select("id, time").
 		Where("ticker = ?", ticker).
 		Order("time DESC").
 		First(&stock)
