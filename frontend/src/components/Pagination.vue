@@ -43,7 +43,7 @@
           
           <template v-for="page in displayedPages" :key="page">
             <button
-              v-if="page !== '...'"
+              v-if="typeof page === 'number'"
               @click="$emit('page-change', page)"
               :class="[
                 page === currentPage

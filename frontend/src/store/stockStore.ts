@@ -5,7 +5,7 @@ import type { Stock, StockRecommendation } from "@/types"
 export const useStockStore = defineStore("stock", () => {
 
   const API_URL = import.meta.env.VITE_APP_API_URL || "http://localhost:8081"
-  console.log(API_URL)
+  //console.log(API_URL)
   const stocks = ref<Stock[]>([])
   const recommendations = ref<StockRecommendation[]>([])
   const isLoading = ref(false)
@@ -35,7 +35,7 @@ export const useStockStore = defineStore("stock", () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await fetch(`http://localhost:8081/api/stock/ticker/${ticker}`)
+      const response = await fetch(`${API_URL}/api/stock/ticker/${ticker}`)
       const data = await response.json()
       return data.item
     } catch (err) {
@@ -52,8 +52,8 @@ export const useStockStore = defineStore("stock", () => {
     error.value = null
     try {
       const url = date
-      ? `http://localhost:8081/api/stock/recommendations?time=${date}`
-      : "http://localhost:8081/api/stock/recommendations"
+      ? `${API_URL}/api/stock/recommendations?time=${date}`
+      : `${API_URL}/api/stock/recommendations`
 
       const response = await fetch(url)
       const data = await response.json()
@@ -75,7 +75,7 @@ export const useStockStore = defineStore("stock", () => {
     isLoading.value = true
     error.value = null
     try {
-      await fetch("http://localhost:8081/api/stock/sync", {
+      await fetch(`${API_URL}/api/stock/sync`, {
         method: "POST",
       })
       await fetchStocks()
