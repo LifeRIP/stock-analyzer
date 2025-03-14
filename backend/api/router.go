@@ -21,6 +21,11 @@ func NewRouter(
 ) *mux.Router {
 	router := mux.NewRouter()
 
+	// Middleware healthcheck
+	router.HandleFunc("/up", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods(http.MethodGet)
+
 	// Middleware para CORS
 	router.Use(corsMiddleware)
 
