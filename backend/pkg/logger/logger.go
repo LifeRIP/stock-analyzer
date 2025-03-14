@@ -27,6 +27,13 @@ func NewLogger(cfg *config.Config) (*zap.Logger, error) {
 	// Configurar salida
 	config.OutputPaths = []string{"stdout"}
 	if cfg.Environment == "production" {
+		// Asegurar que el directorio logs exista
+		if _, err := os.Stat("logs"); os.IsNotExist(err) {
+			err = os.MkdirAll("logs", 0755)
+			if err != nil {
+				return nil, err
+			}
+		}
 		config.OutputPaths = append(config.OutputPaths, "logs/app.log")
 	}
 

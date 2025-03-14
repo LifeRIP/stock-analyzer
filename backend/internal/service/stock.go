@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/fx"
@@ -63,6 +64,10 @@ func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
 	timeStart := time.Now()
 	var nextPage string
 	var count int
+	var mu sync.Mutex // Mutex para proteger el contador
+
+	// Número de workers para procesar stocks en paralelo
+	const numWorkers = 10
 
 	for {
 		// Obtener datos de la API
@@ -72,67 +77,48 @@ func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
 			return count, fmt.Errorf("error getting stocks from the API: %w", err)
 		}
 
-		// Guardar cada stock en la base de datos
-		for _, item := range response.Items {
+		// Crear un canal para los items y waitgroup para esperar a que terminen
+		itemCh := make(chan models.StockItem, len(response.Items))
+		var wg sync.WaitGroup
+		errCh := make(chan error, len(response.Items))
 
-			// Parsear la fecha
-			timeValue, err := time.Parse(time.RFC3339, item.Time)
+		// Iniciar workers
+		for i := 0; i < numWorkers; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
 
-			if err != nil {
-				s.logger.Warn("Error parsing date, using current time",
-					zap.String("time", item.Time),
-					zap.Error(err))
-				timeValue = time.Now()
-			}
-
-			// Crear modelo de stock
-			stock := &models.Stock{
-				Ticker:     item.Ticker,
-				Company:    item.Company,
-				Brokerage:  item.Brokerage,
-				Action:     item.Action,
-				RatingFrom: item.RatingFrom,
-				RatingTo:   item.RatingTo,
-				TargetFrom: item.TargetFrom,
-				TargetTo:   item.TargetTo,
-				Time:       timeValue,
-			}
-
-			// Verificar si ya existe
-			existing, err := s.repo.GetByTickerSimple(ctx, item.Ticker)
-			if err != nil {
-				s.logger.Error("Error checking existing stock",
-					zap.String("ticker", item.Ticker),
-					zap.Error(err))
-				return count, fmt.Errorf("error checking existing stock: %w", err)
-			}
-
-			if existing == nil {
-				// Crear nuevo stock
-				if err := s.repo.Create(ctx, stock); err != nil {
-					s.logger.Error("Error creating stock",
-						zap.String("ticker", item.Ticker),
-						zap.Error(err))
-					return count, fmt.Errorf("error creating stock: %w", err)
-				}
-			} else {
-				// Truncar la fecha a segundos para evitar problemas de precisión
-				timeValue = timeValue.Truncate(time.Second)
-				existing.Time = existing.Time.Truncate(time.Second)
-
-				// Actualizar stock existente si la fecha es más reciente
-				if timeValue.After(existing.Time) {
-					stock.ID = existing.ID
-					if err := s.repo.Update(ctx, stock); err != nil {
-						s.logger.Error("Error updating stock:",
-							zap.String("ticker", item.Ticker),
-							zap.Error(err))
-						return count, fmt.Errorf("error updating stock: %w", err)
+				for item := range itemCh {
+					if err := s.processStockItem(ctx, item, &mu, &count); err != nil {
+						select {
+						case errCh <- err:
+							// Enviar el error al canal
+						default:
+							// Si el canal está lleno, logear el error y continuar
+							s.logger.Error("Error processing stock item", zap.Error(err))
+						}
+						return
 					}
 				}
-			}
+			}()
+		}
 
-			count++
+		// Enviar items a los workers
+		for _, item := range response.Items {
+			itemCh <- item
+		}
+		close(itemCh)
+
+		// Esperar a que terminen todos los workers
+		wg.Wait()
+
+		// Verificar si hay errores
+		select {
+		case err := <-errCh:
+			s.logger.Error("Error in worker", zap.Error(err))
+			return count, err
+		default:
+			// No hay errores, continuamos
 		}
 
 		// Verificar si hay más páginas
@@ -141,13 +127,169 @@ func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
 			break
 		}
 
-		// Añadir delay de 1 segundo entre peticiones
-		//time.Sleep(1 * time.Second)
+		// Añadir delay para no saturar la API
+		//time.Sleep(500 * time.Millisecond)
 	}
 
 	s.logger.Info("Synchronization completed", zap.Int("count", count), zap.Duration("duration", time.Since(timeStart)))
 	return count, nil
 }
+
+// processStockItem procesa un solo item de stock
+func (s *stockService) processStockItem(ctx context.Context, item models.StockItem, mu *sync.Mutex, count *int) error {
+	// Parsear la fecha
+	timeValue, err := time.Parse(time.RFC3339, item.Time)
+	if err != nil {
+		s.logger.Warn("Error parsing date, using current time",
+			zap.String("time", item.Time),
+			zap.Error(err))
+		timeValue = time.Now()
+	}
+
+	// Crear modelo de stock
+	stock := &models.Stock{
+		Ticker:     item.Ticker,
+		Company:    item.Company,
+		Brokerage:  item.Brokerage,
+		Action:     item.Action,
+		RatingFrom: item.RatingFrom,
+		RatingTo:   item.RatingTo,
+		TargetFrom: item.TargetFrom,
+		TargetTo:   item.TargetTo,
+		Time:       timeValue,
+	}
+
+	// Verificar si ya existe
+	existing, err := s.repo.GetByTickerSimple(ctx, item.Ticker)
+	if err != nil {
+		s.logger.Error("Error checking existing stock",
+			zap.String("ticker", item.Ticker),
+			zap.Error(err))
+		return fmt.Errorf("error checking existing stock: %w", err)
+	}
+
+	if existing == nil {
+		// Crear nuevo stock
+		if err := s.repo.Create(ctx, stock); err != nil {
+			s.logger.Error("Error creating stock",
+				zap.String("ticker", item.Ticker),
+				zap.Error(err))
+			return fmt.Errorf("error creating stock: %w", err)
+		}
+	} else {
+		// Truncar la fecha a segundos para evitar problemas de precisión
+		timeValue = timeValue.Truncate(time.Second)
+		existing.Time = existing.Time.Truncate(time.Second)
+
+		// Actualizar stock existente si la fecha es más reciente
+		if timeValue.After(existing.Time) {
+			stock.ID = existing.ID
+			if err := s.repo.Update(ctx, stock); err != nil {
+				s.logger.Error("Error updating stock:",
+					zap.String("ticker", item.Ticker),
+					zap.Error(err))
+				return fmt.Errorf("error updating stock: %w", err)
+			}
+		}
+	}
+
+	mu.Lock()
+	*count++
+	mu.Unlock()
+
+	return nil
+}
+
+// // SyncStocksFromAPI sincroniza los stocks desde la API externa
+// func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
+// 	timeStart := time.Now()
+// 	var nextPage string
+// 	var count int
+
+// 	for {
+// 		// Obtener datos de la API
+// 		response, err := s.stockClient.GetStocks(nextPage)
+// 		if err != nil {
+// 			s.logger.Error("Error getting stocks from the API", zap.Error(err))
+// 			return count, fmt.Errorf("error getting stocks from the API: %w", err)
+// 		}
+
+// 		// Guardar cada stock en la base de datos
+// 		for _, item := range response.Items {
+
+// 			// Parsear la fecha
+// 			timeValue, err := time.Parse(time.RFC3339, item.Time)
+
+// 			if err != nil {
+// 				s.logger.Warn("Error parsing date, using current time",
+// 					zap.String("time", item.Time),
+// 					zap.Error(err))
+// 				timeValue = time.Now()
+// 			}
+
+// 			// Crear modelo de stock
+// 			stock := &models.Stock{
+// 				Ticker:     item.Ticker,
+// 				Company:    item.Company,
+// 				Brokerage:  item.Brokerage,
+// 				Action:     item.Action,
+// 				RatingFrom: item.RatingFrom,
+// 				RatingTo:   item.RatingTo,
+// 				TargetFrom: item.TargetFrom,
+// 				TargetTo:   item.TargetTo,
+// 				Time:       timeValue,
+// 			}
+
+// 			// Verificar si ya existe
+// 			existing, err := s.repo.GetByTickerSimple(ctx, item.Ticker)
+// 			if err != nil {
+// 				s.logger.Error("Error checking existing stock",
+// 					zap.String("ticker", item.Ticker),
+// 					zap.Error(err))
+// 				return count, fmt.Errorf("error checking existing stock: %w", err)
+// 			}
+
+// 			if existing == nil {
+// 				// Crear nuevo stock
+// 				if err := s.repo.Create(ctx, stock); err != nil {
+// 					s.logger.Error("Error creating stock",
+// 						zap.String("ticker", item.Ticker),
+// 						zap.Error(err))
+// 					return count, fmt.Errorf("error creating stock: %w", err)
+// 				}
+// 			} else {
+// 				// Truncar la fecha a segundos para evitar problemas de precisión
+// 				timeValue = timeValue.Truncate(time.Second)
+// 				existing.Time = existing.Time.Truncate(time.Second)
+
+// 				// Actualizar stock existente si la fecha es más reciente
+// 				if timeValue.After(existing.Time) {
+// 					stock.ID = existing.ID
+// 					if err := s.repo.Update(ctx, stock); err != nil {
+// 						s.logger.Error("Error updating stock:",
+// 							zap.String("ticker", item.Ticker),
+// 							zap.Error(err))
+// 						return count, fmt.Errorf("error updating stock: %w", err)
+// 					}
+// 				}
+// 			}
+
+// 			count++
+// 		}
+
+// 		// Verificar si hay más páginas
+// 		nextPage = response.NextPage
+// 		if nextPage == "" {
+// 			break
+// 		}
+
+// 		// Añadir delay de 1 segundo entre peticiones
+// 		//time.Sleep(1 * time.Second)
+// 	}
+
+// 	s.logger.Info("Synchronization completed", zap.Int("count", count), zap.Duration("duration", time.Since(timeStart)))
+// 	return count, nil
+// }
 
 // GetRecommendations obtiene recomendaciones de stocks para invertir
 func (s *stockService) GetRecommendations(ctx context.Context) ([]models.StockRecommendation, error) {
