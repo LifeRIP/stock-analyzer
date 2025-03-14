@@ -32,7 +32,7 @@
       {{ stockStore.error }}
     </div>
     
-    <div v-else-if="recommendations.error" class="text-center my-8 text-gray-500">
+    <div v-else-if="recommendations.length === 0" class="text-center my-8 text-gray-500">
       No recommendations found for the selected criteria.
     </div>
     

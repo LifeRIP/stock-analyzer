@@ -3,6 +3,9 @@ import { ref } from "vue"
 import type { Stock, StockRecommendation } from "@/types"
 
 export const useStockStore = defineStore("stock", () => {
+
+  const API_URL = import.meta.env.VITE_APP_API_URL || "http://localhost:8081"
+  console.log(API_URL)
   const stocks = ref<Stock[]>([])
   const recommendations = ref<StockRecommendation[]>([])
   const isLoading = ref(false)
@@ -12,13 +15,13 @@ export const useStockStore = defineStore("stock", () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await fetch("http://localhost:8081/api/stock")
+      const response = await fetch(`${API_URL}/api/stock`)
       const data = await response.json()
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`)
       }
       stocks.value = data.items
-      console.log(data)
+      //console.log(data)
       return data
     } catch (err) {
       error.value = "Failed to fetch stocks"
@@ -54,6 +57,9 @@ export const useStockStore = defineStore("stock", () => {
 
       const response = await fetch(url)
       const data = await response.json()
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
       recommendations.value = data
       return data
     } catch (err) {

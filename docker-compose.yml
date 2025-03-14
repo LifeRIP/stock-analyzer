@@ -32,16 +32,26 @@ services:
     volumes:
       - ./backend:/app
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: ../frontend/Dockerfile
-  #   ports:
-  #     - "8082:80"
-  #   depends_on:
-  #     - backend
-  #   networks:
-  #     - app-network
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../frontend/Dockerfile
+    ports:
+      - "8082:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    # volumes:
+    #   - ./frontend:/app
+    develop:
+      watch:
+        - path: ./frontend
+          action: sync+restart
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
 
 volumes:
   cockroach-data:

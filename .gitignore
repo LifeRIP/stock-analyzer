@@ -1,4 +1,5 @@
 backend/.env
+fronted/.env
 backend/tmp/*
 backend/logs/*
 frontend/node_modules
