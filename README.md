@@ -1,6 +1,6 @@
 # Stock-Analyzer
 
-Stock-Analyzer es una aplicación diseñada para analizar datos de inventarios y proporcionar información útil para la gestión de stocks.
+Stock-Analyzer es una aplicación diseñada para analizar datos de acciones tomados de una API externa y proporcionar información útil para invertir.
 
 ## Requisitos
 
@@ -31,4 +31,3 @@ Una vez que los contenedores estén en ejecución, puedes acceder a la aplicaci�
 - **CockroachDB Web UI**: [http://localhost:8080/](http://localhost:8080/)
 - **API**: [http://localhost:8081/](http://localhost:8081/)
 - **App Web UI**: [http://localhost:8082/](http://localhost:8082/)
-
