@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useStockStore } from "../stores/stockStore";
 import type { Stock } from "@/types";
+import { ArrowRightIcon } from "@heroicons/vue/24/outline";
 
 defineProps<{
   stocks: Stock[];
@@ -25,14 +26,14 @@ const formatDate = (dateString: string) => {
 };
 
 const getRatingClass = (from: string, to: string) => {
-  if (!from || !to) return "text-gray-600";
+  if (!from || !to) return "text-gray-500";
 
   const fromLevel = stockStore.getRatingLevel(from);
   const toLevel = stockStore.getRatingLevel(to);
 
   if (toLevel > fromLevel) return "text-green-600";
   if (toLevel < fromLevel) return "text-red-600";
-  return "text-gray-600";
+  return "text-gray-500";
 };
 
 const getTargetClass = (from: string, to: string) => {
@@ -41,7 +42,7 @@ const getTargetClass = (from: string, to: string) => {
 
   if (toValue > fromValue) return "text-green-600";
   if (toValue < fromValue) return "text-red-600";
-  return "text-gray-600";
+  return "text-gray-500";
 };
 </script>
 
@@ -158,13 +159,13 @@ const getTargetClass = (from: string, to: string) => {
                 </th>
                 <th
                   scope="col"
-                  class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]"
+                  class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[17%]"
                 >
                   Broker
                 </th>
                 <th
                   scope="col"
-                  class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]"
+                  class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]"
                 >
                   Action
                 </th>
@@ -216,7 +217,8 @@ const getTargetClass = (from: string, to: string) => {
                 <td class="px-3 py-3">
                   <div class="text-sm" :class="getRatingClass(stock.rating_from, stock.rating_to)">
                     <template v-if="stock.rating_from && stock.rating_from !== stock.rating_to">
-                      <span class="text-gray-500">{{ stock.rating_from }}</span> →
+                      <span class="text-gray-500">{{ stock.rating_from }}</span>
+                      <ArrowRightIcon class="inline-block h-4 w-4 mx-1" />
                       {{ stock.rating_to }}
                     </template>
                     <template v-else>
