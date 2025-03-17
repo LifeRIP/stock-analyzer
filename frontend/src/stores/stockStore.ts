@@ -19,7 +19,6 @@ export const useStockStore = defineStore("stock", () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       stocks.value = data.items;
-      //console.log(data)
       return data;
     } catch (err) {
       error.value = "Failed to fetch stocks";
@@ -87,7 +86,6 @@ export const useStockStore = defineStore("stock", () => {
     }
   };
 
-  // Agregar la función para obtener el nivel de rating
   const getRatingLevel = (rating: string): number => {
     const positiveRatings = [
       "Strong-Buy",
@@ -124,7 +122,6 @@ export const useStockStore = defineStore("stock", () => {
     return 0;
   };
 
-  // Agregar la función al return del store
   return {
     stocks,
     recommendations,

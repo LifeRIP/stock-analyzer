@@ -1,33 +1,34 @@
 # Stock-Analyzer
 
-Stock-Analyzer es una aplicación diseñada para analizar datos de acciones tomados de una API externa y proporcionar información útil para invertir.
+Stock-Analyzer is an application designed to analyze stock data retrieved from an external API and provide useful insights for investing.
 
-## Requisitos
+## Requirements
 
-- [Docker](https://www.docker.com/) instalado en tu sistema.
-- Archivo `.env` en el directorio del backend.
+- [Docker](https://www.docker.com/) installed on your system.
+- `.env` file in the backend directory.
 
-## Configuración
+## Setup
 
-1. **Configurar el entorno**:
-   - En el directorio del backend, asegúrate de incluir un archivo `.env` basado en el `.env.example` proporcionado.
-   - Puedes copiarlo y renombrarlo con el siguiente comando:
+1. **Configure the environment**:
+   - In the backend directory, make sure to include a `.env` file based on the provided `.env.example`.
+   - You can copy and rename it using the following command:
      ```sh
      cp backend/.env.example backend/.env
      ```
-   - Luego, edita el archivo `.env` con las configuraciones necesarias.
+   - Then, edit the `.env` file with the necessary configurations.
 
-2. **Iniciar el proyecto**:
-   - Desde la raíz del proyecto, ejecuta el siguiente comando:
+2. **Start the project**:
+   - From the project root, run the following command:
      ```sh
      docker-compose up
      ```
-   - Esto levantará los contenedores necesarios para ejecutar la aplicación.
+   - This will start the necessary containers to run the application.
 
-## Uso
+## Usage
 
-Una vez que los contenedores estén en ejecución, puedes acceder a la aplicación a través de las siguientes URLs:
+Once the containers are up and running, you can access the application through the following URLs:
 
 - **CockroachDB Web UI**: [http://localhost:8080/](http://localhost:8080/)
 - **API**: [http://localhost:8081/](http://localhost:8081/)
 - **App Web UI**: [http://localhost:8082/](http://localhost:8082/)
+
