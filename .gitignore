@@ -3,3 +3,4 @@ frontend/.env
 backend/tmp/*
 backend/logs/*
 frontend/node_modules
+frontend/.vscode/*
