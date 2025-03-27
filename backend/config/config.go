@@ -12,11 +12,17 @@ var Module = fx.Provide(LoadConfig)
 
 // Config contiene la configuración de la aplicación
 type Config struct {
-	DatabaseURL string
-	APIEndpoint string
-	APIKey      string
-	ServerPort  string
-	Environment string
+	DatabaseUser    string
+	DatabasePass    string
+	DatabaseHost    string
+	DatabasePort    string
+	DatabaseName    string
+	DatabaseSSLMode string
+	DatabaseURL     string
+	APIEndpoint     string
+	APIKey          string
+	ServerPort      string
+	Environment     string
 }
 
 // LoadConfig carga la configuración desde variables de entorno
@@ -25,11 +31,16 @@ func LoadConfig() (*Config, error) {
 	_ = godotenv.Load()
 
 	return &Config{
-		DatabaseURL: getEnv("DATABASE_URL", "postgresql://root@localhost:26257/defaultdb?sslmode=disable"),
-		APIEndpoint: getEnv("API_ENDPOINT", "http://localhost:8081"),
-		APIKey:      getEnv("API_KEY", "exampleApiKey"),
-		ServerPort:  getEnv("PORT", "8080"),
-		Environment: getEnv("ENVIRONMENT", "development"),
+		DatabaseUser:    getEnv("DATABASE_USER", "root"),
+		DatabasePass:    getEnv("DATABASE_PASS", ""),
+		DatabaseHost:    getEnv("DATABASE_HOST", "cockroach"),
+		DatabasePort:    getEnv("DATABASE_PORT", "26257"),
+		DatabaseName:    getEnv("DATABASE_NAME", "stock_analyzer_db"),
+		DatabaseSSLMode: getEnv("DATABASE_SSL_MODE", "disable"),
+		APIEndpoint:     getEnv("API_ENDPOINT", "http://localhost:8083"),
+		APIKey:          getEnv("API_KEY", "exampleApiKey"),
+		ServerPort:      getEnv("PORT", "8080"),
+		Environment:     getEnv("ENVIRONMENT", "development"),
 	}, nil
 }
 

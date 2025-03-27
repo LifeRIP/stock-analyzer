@@ -29,7 +29,16 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// Conectar a la base de datos
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), gormConfig)
+	db, err := gorm.Open(postgres.Open(createURL(cfg)), gormConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error connecting to the database: %w", err)
+	}
+
+	// Crear la base de datos si no existe
+	db.Exec("CREATE DATABASE IF NOT EXISTS " + cfg.DatabaseName)
+
+	// Re-conectar a la base de datos
+	db, err = gorm.Open(postgres.Open(createURL(cfg)), gormConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to the database: %w", err)
 	}
@@ -50,6 +59,18 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 
 	log.Println("Connection to the database established successfully")
 	return db, nil
+}
+
+// createUrl crea la URL de conexión a la base de datos
+func createURL(cfg *config.Config) string {
+	return fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
+		cfg.DatabaseUser,
+		cfg.DatabasePass,
+		cfg.DatabaseHost,
+		cfg.DatabasePort,
+		cfg.DatabaseName,
+		cfg.DatabaseSSLMode,
+	)
 }
 
 // migrateSchema migra el esquema de la base de datos
