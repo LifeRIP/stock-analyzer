@@ -10,20 +10,10 @@ const props = defineProps<{
 
 const stockStore = useStockStore();
 const stock = ref<Stock | null>(null);
-const isLoading = ref(false);
-const error = ref<string | null>(null);
 
 onMounted(async () => {
-  isLoading.value = true;
-  try {
     const result = await stockStore.fetchStockByTicker(props.ticker);
     stock.value = result;
-  } catch (err) {
-    error.value = "Failed to fetch stock details";
-    console.error(err);
-  } finally {
-    isLoading.value = false;
-  }
 });
 
 const formatDate = (dateString: string) => {
@@ -72,15 +62,15 @@ const targetChange = computed(() => {
       </router-link>
     </div>
 
-    <div v-if="isLoading" class="flex justify-center my-8">
+    <div v-if="stockStore.isLoading" class="flex justify-center my-8">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
     </div>
 
     <div
-      v-else-if="error"
+      v-else-if="stockStore.error"
       class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-4"
     >
-      {{ error }}
+      {{ stockStore.error }}
     </div>
 
     <div v-else-if="stock" class="bg-white rounded-lg shadow overflow-hidden">
