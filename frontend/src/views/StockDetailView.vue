@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useStockStore } from "../stores/stockStore";
+import { useStockUtils } from "../composables/useStockUtils";
 import type { Stock } from "@/types";
 import { ArrowLeftIcon } from "@heroicons/vue/24/outline";
 
@@ -9,6 +10,7 @@ const props = defineProps<{
 }>();
 
 const stockStore = useStockStore();
+const { formatDate, getRatingClass, getTargetClass, calculateTargetChange } = useStockUtils();
 const stock = ref<Stock | null>(null);
 
 onMounted(async () => {
@@ -16,40 +18,9 @@ onMounted(async () => {
     stock.value = result;
 });
 
-const formatDate = (dateString: string) => {
-  if (!dateString || dateString === "0001-01-01T00:00:00Z") return "N/A";
-  const date = new Date(dateString);
-  return date.toLocaleDateString();
-};
-
-const getRatingClass = (from: string, to: string) => {
-  if (!from || !to) return "text-gray-600";
-
-  const fromLevel = stockStore.getRatingLevel(from);
-  const toLevel = stockStore.getRatingLevel(to);
-
-  if (toLevel > fromLevel) return "text-green-600";
-  if (toLevel < fromLevel) return "text-red-600";
-  return "text-gray-600";
-};
-
-const getTargetClass = (from: string, to: string) => {
-  const fromValue = parseFloat(from.replace("$", ""));
-  const toValue = parseFloat(to.replace("$", ""));
-
-  if (toValue > fromValue) return "text-green-600";
-  if (toValue < fromValue) return "text-red-600";
-  return "text-gray-600";
-};
-
 const targetChange = computed(() => {
   if (!stock.value) return 0;
-
-  const fromValue = parseFloat(stock.value.target_from.replace("$", ""));
-  const toValue = parseFloat(stock.value.target_to.replace("$", ""));
-
-  if (fromValue === 0) return 0;
-  return ((toValue - fromValue) / fromValue) * 100;
+  return calculateTargetChange(stock.value.target_from, stock.value.target_to);
 });
 </script>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useStockStore } from "../stores/stockStore";
+import { useStockUtils } from "../composables/useStockUtils";
 import type { Stock } from "@/types";
 import { ArrowRightIcon } from "@heroicons/vue/24/outline";
 
@@ -16,34 +17,9 @@ defineEmits<{
   (e: "stock-click", ticker: string): void;
 }>();
 
-const stockStore = useStockStore();
+const { formatDate, getRatingClass, getTargetClass } = useStockUtils();
 const searchQuery = ref("");
 const pageSize = ref(25);
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString();
-};
-
-const getRatingClass = (from: string, to: string) => {
-  if (!from || !to) return "text-gray-500";
-
-  const fromLevel = stockStore.getRatingLevel(from);
-  const toLevel = stockStore.getRatingLevel(to);
-
-  if (toLevel > fromLevel) return "text-green-600";
-  if (toLevel < fromLevel) return "text-red-600";
-  return "text-gray-500";
-};
-
-const getTargetClass = (from: string, to: string) => {
-  const fromValue = parseFloat(from.replace("$", ""));
-  const toValue = parseFloat(to.replace("$", ""));
-
-  if (toValue > fromValue) return "text-green-600";
-  if (toValue < fromValue) return "text-red-600";
-  return "text-gray-500";
-};
 </script>
 
 <template>
@@ -117,7 +93,8 @@ const getTargetClass = (from: string, to: string) => {
               <span class="text-gray-500">Rating:</span>
               <span class="ml-1" :class="getRatingClass(stock.rating_from, stock.rating_to)">
                 <template v-if="stock.rating_from && stock.rating_from !== stock.rating_to">
-                  {{ stock.rating_from }} → {{ stock.rating_to }}
+                  {{ stock.rating_from }}
+                  <ArrowRightIcon class="inline-block h-3 w-3 mx-1" /> {{ stock.rating_to }}
                 </template>
                 <template v-else>
                   {{ stock.rating_to || "N/A" }}
@@ -128,7 +105,8 @@ const getTargetClass = (from: string, to: string) => {
               <span class="text-gray-500">Target:</span>
               <span class="ml-1" :class="getTargetClass(stock.target_from, stock.target_to)">
                 <template v-if="stock.target_from !== stock.target_to">
-                  {{ stock.target_from }} → {{ stock.target_to }}
+                  {{ stock.target_from }}
+                  <ArrowRightIcon class="inline-block h-3 w-3 mx-1" /> {{ stock.target_to }}
                 </template>
                 <template v-else>
                   {{ stock.target_to }}
@@ -218,7 +196,7 @@ const getTargetClass = (from: string, to: string) => {
                   <div class="text-sm" :class="getRatingClass(stock.rating_from, stock.rating_to)">
                     <template v-if="stock.rating_from && stock.rating_from !== stock.rating_to">
                       <span class="text-gray-500">{{ stock.rating_from }}</span>
-                      <ArrowRightIcon class="inline-block h-4 w-4 mx-1" />
+                      <ArrowRightIcon class="inline-block h-3 w-3 mx-1" />
                       {{ stock.rating_to }}
                     </template>
                     <template v-else>
@@ -229,7 +207,8 @@ const getTargetClass = (from: string, to: string) => {
                 <td class="px-3 py-3">
                   <div class="text-sm" :class="getTargetClass(stock.target_from, stock.target_to)">
                     <template v-if="stock.target_from !== stock.target_to">
-                      <span class="text-gray-500">{{ stock.target_from }}</span> →
+                      <span class="text-gray-500">{{ stock.target_from }}</span>
+                      <ArrowRightIcon class="inline-block h-3 w-3 mx-1" />
                       {{ stock.target_to }}
                     </template>
                     <template v-else>
