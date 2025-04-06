@@ -1,6 +1,16 @@
 # 📊 Stock-Analyzer
 
-Stock-Analyzer is an application designed to analyze stock data retrieved from an external API and provide useful insights for investing. 💼📈
+Stock-Analyzer is an application designed to analyze stock data retrieved from an external API and provide useful insights for investing. 💼
+
+## 🎯 Application Purpose
+
+Provide investment recommendations based on an automated analysis of broker activity, rating changes, and price projections. 📈
+
+## 📱 User Interface
+
+![Main Interface](/mockups/mockup1.png)
+![Recommendations and Stock Desktop Interface](/mockups/mockup2.png)
+![Recommendations and Stock Mobile Interface](/mockups/mockup3.png)
 
 ## ⚙️ Requirements
 
@@ -21,7 +31,7 @@ Stock-Analyzer is an application designed to analyze stock data retrieved from a
 2. **Start the project** 🏁:
    - From the project root, run the following command:
      ```sh
-     docker-compose up
+     docker compose up
      ```
    - This will start the necessary containers to run the application.
 
@@ -32,16 +42,6 @@ Once the containers are up and running, you can access the application through t
 - **CockroachDB Web UI**: [http://localhost:8080/](http://localhost:8080/)
 - **API**: [http://localhost:8081/](http://localhost:8081/)
 - **App Web UI**: [http://localhost:8082/](http://localhost:8082/)
-
-## 🎯 Application Purpose
-
-Provide investment recommendations based on an automated analysis of broker activity, rating changes, and price projections.
-
-## 📱 User Interface
-
-![Main Interface](/mockups/mockup1.png)
-![Recommendations and Stock Desktop Interface](/mockups/mockup2.png)
-![Recommendations and Stock Mobile Interface](/mockups/mockup3.png)
 
 ## ⚙️ How Does the Recommendation System Work?
 
@@ -96,3 +96,9 @@ score = ratingScore + actionScore + potentialGrowth
   - Action taken: Target raised by JP Morgan (+7)
   - Increase in target price by 52.86% (+5.3)
 - 📈 **Growth potential:** 52.86%
+
+## ⚠️ Disclaimer
+
+This project is intended for educational and informational purposes only.
+
+All investment decisions are the sole responsibility of the user. I am not responsible for any financial losses or outcomes resulting from the use of this tool. Please do your own research and consult a professional financial advisor before making any investment.
