@@ -1,5 +1,7 @@
 services:
+  ## Development Services
   cockroach:
+    profiles: ["dev"]
     image: cockroachdb/cockroach:v24.3.6
     command: start-single-node --insecure
     ports:
@@ -17,9 +19,10 @@ services:
       start_period: 20s
 
   backend:
+    profiles: ["dev"]
     build:
       context: ./backend
-      dockerfile: ../backend/Dockerfile
+      dockerfile: ../backend/Dockerfile.dev
     ports:
       - "8081:8081"
     env_file:
@@ -33,11 +36,12 @@ services:
       - ./backend:/app
 
   frontend:
+    profiles: ["dev"]
     build:
       context: ./frontend
-      dockerfile: ../frontend/Dockerfile
+      dockerfile: ../frontend/Dockerfile.dev
     ports:
-      - "8082:80"
+      - "8082:5173"
     # env_file:
     #   - ./frontend/.env
     depends_on:
@@ -46,14 +50,58 @@ services:
       - app-network
     volumes:
       - ./frontend:/app
-    # develop:
-    #   watch:
-    #     - path: ./frontend
-    #       action: sync+restart
-    #       target: /app
-    #       ignore:
-    #         - node_modules/
-    #         - dist/
+
+  ## Production Services
+  cockroach-prod:
+    profiles: ["prod"]
+    image: cockroachdb/cockroach:v24.3.6
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "cockroach", "sql", "--insecure", "--execute=SELECT 1"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+      start_period: 20s
+
+  backend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./backend
+      dockerfile: ../backend/Dockerfile.prod
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      cockroach-prod:
+        condition: service_healthy
+    networks:
+      - app-network
+    # volumes:
+    #   - ./backend:/app
+
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./frontend
+      dockerfile: ../frontend/Dockerfile.prod
+    ports:
+      - "8082:80"
+    # env_file:
+    #   - ./frontend/.env
+    depends_on:
+      - backend-prod
+    networks:
+      - app-network
+    volumes:
+      - ./frontend:/app
 
 volumes:
   cockroach-data:
