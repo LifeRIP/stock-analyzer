@@ -35,6 +35,11 @@ Provide investment recommendations based on an automated analysis of broker acti
      ```
    - This will start the necessary containers to run the application.
 
+3. **Open the App Web UI** 🔄:
+   - Go to [http://localhost:8082](http://localhost:8082)
+   - Once there, click on the **"Sync Stocks"** button to fetch the latest stock data.
+
+
 ## 🖥️ Usage
 
 Once the containers are up and running, you can access the application through the following URLs:
