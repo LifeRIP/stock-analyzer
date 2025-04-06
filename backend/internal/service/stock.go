@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -126,9 +126,6 @@ func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
 		if nextPage == "" {
 			break
 		}
-
-		// Añadir delay para no saturar la API
-		//time.Sleep(500 * time.Millisecond)
 	}
 
 	s.logger.Info("Synchronization completed", zap.Int("count", count), zap.Duration("duration", time.Since(timeStart)))
@@ -199,97 +196,6 @@ func (s *stockService) processStockItem(ctx context.Context, item models.StockIt
 
 	return nil
 }
-
-// // SyncStocksFromAPI sincroniza los stocks desde la API externa
-// func (s *stockService) SyncStocksFromAPI(ctx context.Context) (int, error) {
-// 	timeStart := time.Now()
-// 	var nextPage string
-// 	var count int
-
-// 	for {
-// 		// Obtener datos de la API
-// 		response, err := s.stockClient.GetStocks(nextPage)
-// 		if err != nil {
-// 			s.logger.Error("Error getting stocks from the API", zap.Error(err))
-// 			return count, fmt.Errorf("error getting stocks from the API: %w", err)
-// 		}
-
-// 		// Guardar cada stock en la base de datos
-// 		for _, item := range response.Items {
-
-// 			// Parsear la fecha
-// 			timeValue, err := time.Parse(time.RFC3339, item.Time)
-
-// 			if err != nil {
-// 				s.logger.Warn("Error parsing date, using current time",
-// 					zap.String("time", item.Time),
-// 					zap.Error(err))
-// 				timeValue = time.Now()
-// 			}
-
-// 			// Crear modelo de stock
-// 			stock := &models.Stock{
-// 				Ticker:     item.Ticker,
-// 				Company:    item.Company,
-// 				Brokerage:  item.Brokerage,
-// 				Action:     item.Action,
-// 				RatingFrom: item.RatingFrom,
-// 				RatingTo:   item.RatingTo,
-// 				TargetFrom: item.TargetFrom,
-// 				TargetTo:   item.TargetTo,
-// 				Time:       timeValue,
-// 			}
-
-// 			// Verificar si ya existe
-// 			existing, err := s.repo.GetByTickerSimple(ctx, item.Ticker)
-// 			if err != nil {
-// 				s.logger.Error("Error checking existing stock",
-// 					zap.String("ticker", item.Ticker),
-// 					zap.Error(err))
-// 				return count, fmt.Errorf("error checking existing stock: %w", err)
-// 			}
-
-// 			if existing == nil {
-// 				// Crear nuevo stock
-// 				if err := s.repo.Create(ctx, stock); err != nil {
-// 					s.logger.Error("Error creating stock",
-// 						zap.String("ticker", item.Ticker),
-// 						zap.Error(err))
-// 					return count, fmt.Errorf("error creating stock: %w", err)
-// 				}
-// 			} else {
-// 				// Truncar la fecha a segundos para evitar problemas de precisión
-// 				timeValue = timeValue.Truncate(time.Second)
-// 				existing.Time = existing.Time.Truncate(time.Second)
-
-// 				// Actualizar stock existente si la fecha es más reciente
-// 				if timeValue.After(existing.Time) {
-// 					stock.ID = existing.ID
-// 					if err := s.repo.Update(ctx, stock); err != nil {
-// 						s.logger.Error("Error updating stock:",
-// 							zap.String("ticker", item.Ticker),
-// 							zap.Error(err))
-// 						return count, fmt.Errorf("error updating stock: %w", err)
-// 					}
-// 				}
-// 			}
-
-// 			count++
-// 		}
-
-// 		// Verificar si hay más páginas
-// 		nextPage = response.NextPage
-// 		if nextPage == "" {
-// 			break
-// 		}
-
-// 		// Añadir delay de 1 segundo entre peticiones
-// 		//time.Sleep(1 * time.Second)
-// 	}
-
-// 	s.logger.Info("Synchronization completed", zap.Int("count", count), zap.Duration("duration", time.Since(timeStart)))
-// 	return count, nil
-// }
 
 // GetRecommendations obtiene recomendaciones de stocks para invertir
 func (s *stockService) GetRecommendations(ctx context.Context) ([]models.StockRecommendation, error) {
@@ -442,20 +348,21 @@ func (s *stockService) getActionScore(action string) float64 {
 
 // TODO: Implementar una puntuación real basada en un API como Alphavantage
 // getBrokerScore asigna una puntuación de confianza a un broker
-func (s *stockService) getBrokerScore(broker string) float64 {
-	switch broker {
-	case "The Goldman Sachs Group":
-		return 3
-	case "JP Morgan":
-		return 2
-	default:
-		return 1
-	}
-}
+// func (s *stockService) getBrokerScore(broker string) float64 {
+// 	switch broker {
+// 	case "The Goldman Sachs Group":
+// 		return 3
+// 	case "JP Morgan":
+// 		return 2
+// 	default:
+// 		return 1
+// 	}
+// }
 
 // parsePrice convierte un string de precio a float64
 func (s *stockService) parsePrice(price string) (float64, error) {
-	// Eliminar el símbolo de dólar y espacios
-	price = strings.TrimSpace(strings.Replace(price, "$", "", -1))
+	// Eliminar el símbolo de dólar, comas y espacios con expresión regular
+	re := regexp.MustCompile(`[$,\s]`)
+	price = re.ReplaceAllString(price, "")
 	return strconv.ParseFloat(price, 64)
 }

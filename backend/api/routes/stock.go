@@ -12,7 +12,6 @@ import (
 
 // RegisterStockRoutes registra las rutas relacionadas con stocks
 func RegisterStockRoutes(router *mux.Router, stockHandler *handlers.StockHandler) {
-	// Obtener nombre del archivo actual
 
 	// Rutas para stocks
 	router.HandleFunc("/stock", stockHandler.GetStocks).Methods(http.MethodGet)
