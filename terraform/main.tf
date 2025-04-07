@@ -15,10 +15,19 @@ resource "aws_instance" "app_server" {
   user_data = file("user_data.sh")
 
   tags = {
-    Name = "docker-app-server"
+    Name = "stock-analyzer-app-server"
   }
 
   vpc_security_group_ids = [aws_security_group.allow_web.id]
+}
+
+resource "aws_eip" "app_server_eip" {
+  instance = aws_instance.app_server.id
+  domain = "vpc"
+
+  tags = {
+    Name = "stock-analyzer-app-server-eip"
+  }
 }
 
 resource "aws_security_group" "allow_web" {

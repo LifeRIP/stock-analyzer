@@ -31,7 +31,7 @@ Provide investment recommendations based on an automated analysis of broker acti
 2. **Start the project** 🏁:
    - From the project root, run the following command:
      ```sh
-     docker compose up
+     docker-compose --profile dev up
      ```
    - This will start the necessary containers to run the application.
 
@@ -101,6 +101,56 @@ score = ratingScore + actionScore + potentialGrowth
   - Action taken: Target raised by JP Morgan (+7)
   - Increase in target price by 52.86% (+5.3)
 - 📈 **Growth potential:** 52.86%
+
+Perfecto, aquí tienes el apartado para agregar al `README.md` sobre cómo desplegar la aplicación en AWS usando Terraform:
+
+## ☁️ Deploying on AWS
+
+To deploy this application on an AWS EC2 instance using Terraform, follow these steps:
+
+### 🔧 Requirements
+
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) installed.
+- AWS credentials configured in your system (`~/.aws/credentials` or environment variables).
+- An SSH key generated using `ed25519`.
+
+  You can generate one with the following command:
+
+  ```sh
+  ssh-keygen -t ed25519
+  ```
+
+  Save the private key securely, as it will be required to access the instance.
+
+### 🚀 Deployment Steps
+
+1. **Navigate to the Terraform folder**:
+   ```sh
+   cd terraform
+   ```
+
+2. **Initialize Terraform**:
+   ```sh
+   terraform init
+   ```
+
+3. **Apply the configuration**:
+   ```sh
+   terraform apply
+   ```
+   Confirm when prompted. This will create an EC2 instance and set it up for deployment.
+
+4. **Upload your configured `.env` files** to the corresponding folders in the instance:
+   - `backend/.env`
+   - `frontend/.env`
+
+5. **Access the EC2 instance via SSH**, then navigate to the app directory and run:
+
+   ```sh
+   docker-compose --profile prod up -d
+   ```
+
+6. ✅ Your app should now be live and running on your EC2 instance!
 
 ## ⚠️ Disclaimer
 
