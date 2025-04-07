@@ -5,3 +5,6 @@ backend/logs/*
 frontend/node_modules
 frontend/.vscode/*
 .vscode/settings.json
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/*
