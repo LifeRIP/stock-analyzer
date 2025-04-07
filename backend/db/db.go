@@ -28,23 +28,44 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 		gormConfig.Logger = logger.Default.LogMode(logger.Error)
 	}
 
-	// Conectar a la base de datos
+	// Primero intentamos conectarnos a la base de datos postgres (default)
+	tempConfig := *cfg
+	tempConfig.DatabaseName = "defaultdb"
+
+	tempDB, err := gorm.Open(postgres.Open(createURL(&tempConfig)), gormConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error connecting to postgres database: %w", err)
+	}
+
+	// Crear la base de datos si no existe
+	createDBQuery := fmt.Sprintf(
+		"SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')",
+		cfg.DatabaseName, cfg.DatabaseName,
+	)
+
+	// Ejecutar la consulta para crear la base de datos
+	var result string
+	tempDB.Raw(createDBQuery).Scan(&result)
+
+	fmt.Println("result", result)
+	if result != "" {
+		// Si la base de datos no existe, crearla
+		tempDB.Exec(result)
+		log.Printf("Database %s created successfully", cfg.DatabaseName)
+	}
+
+	// Cerrar la conexión temporal
+	sqlDB, _ := tempDB.DB()
+	sqlDB.Close()
+
+	// Conectar a la base de datos destino
 	db, err := gorm.Open(postgres.Open(createURL(cfg)), gormConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to the database: %w", err)
 	}
 
-	// Crear la base de datos si no existe
-	db.Exec("CREATE DATABASE IF NOT EXISTS " + cfg.DatabaseName)
-
-	// Re-conectar a la base de datos
-	db, err = gorm.Open(postgres.Open(createURL(cfg)), gormConfig)
-	if err != nil {
-		return nil, fmt.Errorf("error connecting to the database: %w", err)
-	}
-
 	// Configurar el pool de conexiones
-	sqlDB, err := db.DB()
+	sqlDB, err = db.DB()
 	if err != nil {
 		return nil, fmt.Errorf("error getting SQL connection: %w", err)
 	}
