@@ -16,14 +16,32 @@ import (
 	"github.com/liferip/stock-analyzer/backend/api"
 	"github.com/liferip/stock-analyzer/backend/api/handlers"
 	"github.com/liferip/stock-analyzer/backend/api/routes"
+	"github.com/liferip/stock-analyzer/backend/api/swagger"
 	"github.com/liferip/stock-analyzer/backend/config"
 	"github.com/liferip/stock-analyzer/backend/db"
 	"github.com/liferip/stock-analyzer/backend/internal/repository"
 	"github.com/liferip/stock-analyzer/backend/internal/service"
 	"github.com/liferip/stock-analyzer/backend/pkg/httpclient"
 	"github.com/liferip/stock-analyzer/backend/pkg/logger"
+
+	_ "github.com/liferip/stock-analyzer/backend/docs" // Importar documentos generados
 )
 
+// @title Stock Analyzer API
+// @version 1.0
+// @description API to analyze and manage stocks
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.example.com/support
+// @contact.email support@example.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http
 func main() {
 	fx.New(
 		// Incluir módulos
@@ -36,6 +54,7 @@ func main() {
 		handlers.Module,
 		routes.Module,
 		api.Module,
+		swagger.Module,
 
 		// Registrar hooks
 		fx.Invoke(register),
