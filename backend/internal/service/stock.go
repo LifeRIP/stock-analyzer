@@ -313,9 +313,9 @@ func (s *stockService) getRatingScore(rating string) float64 {
 		return 5
 	case "Outperform", "Outperformer", "Overweight":
 		return 4
-	case "Neutral", "Hold", "Equal Weight", "In-Line", "Inline", "Sector Perform", "Market Perform", "Sector Weight":
+	case "Neutral", "Hold", "Equal Weight", "In-Line", "Inline", "Sector Perform", "Market Perform", "Sector Weight", "Peer Perform":
 		return 3
-	case "Underweight", "Underperform", "Sector Underperform", "Reduce", "Negative":
+	case "Underweight", "Underperform", "Sector Underperform", "Reduce", "Negative", "Cautious":
 		return 2
 	case "Sell":
 		return 1
