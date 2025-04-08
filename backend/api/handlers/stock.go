@@ -32,7 +32,15 @@ func NewStockHandler(
 	}
 }
 
-// GetStocks maneja la solicitud para obtener todos los stocks
+// @Summary		Get all stocks
+// @Description	Retrieves the complete list of available stocks
+// @Tags			stock
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	map[string][]models.Stock
+// @Failure		404	{object}	map[string]string	"No stocks found"
+// @Failure		500	{object}	map[string]string	"Error getting stocks"
+// @Router			/stock [get]
 func (h *StockHandler) GetStocks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -54,7 +62,16 @@ func (h *StockHandler) GetStocks(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetStockByTicker maneja la solicitud para obtener un stock por su ticker
+// @Summary		Get stock by ticker
+// @Description	Retrieves information for a specific stock by its ticker symbol
+// @Tags			stock
+// @Accept			json
+// @Produce		json
+// @Param			ticker	path		string	true	"Stock ticker symbol (e.g. AAPL)"
+// @Success		200		{object}	map[string]models.Stock
+// @Failure		404		{object}	map[string]string	"Stock not found"
+// @Failure		500		{object}	map[string]string	"Error getting stock by ticker"
+// @Router			/stock/ticker/{ticker} [get]
 func (h *StockHandler) GetStockByTicker(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -78,7 +95,16 @@ func (h *StockHandler) GetStockByTicker(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// GetRecommendations maneja la solicitud para obtener recomendaciones de stocks
+// @Summary		Get stock recommendations
+// @Description	Retrieves stock recommendations, optionally filtered by time
+// @Tags			stock
+// @Accept			json
+// @Produce		json
+// @Param			time	query		string	false	"Time filter in YY/MM/DD format (e.g. '2025-03-31')"
+// @Success		200		{array}		models.StockRecommendation
+// @Failure		404		{object}	map[string]string	"No recommendations found"
+// @Failure		500		{object}	map[string]string	"Error getting recommendations"
+// @Router			/stock/recommendations [get]
 func (h *StockHandler) GetRecommendations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -115,7 +141,14 @@ func (h *StockHandler) GetRecommendations(w http.ResponseWriter, r *http.Request
 	respondWithJSON(w, http.StatusOK, recommendations)
 }
 
-// SyncStocks maneja la solicitud para sincronizar stocks desde la API externa
+// @Summary		Synchronize stocks
+// @Description	Synchronizes stocks from an external API
+// @Tags			stock
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	map[string]interface{}	"Success message and count"
+// @Failure		500	{object}	map[string]string		"Error synchronizing stocks"
+// @Router			/stock/sync [post]
 func (h *StockHandler) SyncStocks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

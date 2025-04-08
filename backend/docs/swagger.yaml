@@ -1,5 +1,46 @@
-basePath: /api/v1
-host: localhost:8080
+basePath: /api
+definitions:
+  models.Stock:
+    properties:
+      action:
+        type: string
+      brokerage:
+        type: string
+      company:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      rating_from:
+        type: string
+      rating_to:
+        type: string
+      target_from:
+        type: string
+      target_to:
+        type: string
+      ticker:
+        type: string
+      time:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.StockRecommendation:
+    properties:
+      potential_up:
+        type: number
+      reasons:
+        items:
+          type: string
+        type: array
+      score:
+        type: number
+      stock:
+        $ref: '#/definitions/models.Stock'
+    type: object
+host: stock-analyzer.ddns.net:8081
 info:
   contact:
     email: support@example.com
@@ -12,7 +53,129 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Stock Analyzer API
   version: "1.0"
-paths: {}
+paths:
+  /stock:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the complete list of available stocks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/models.Stock'
+              type: array
+            type: object
+        "404":
+          description: No stocks found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error getting stocks
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all stocks
+      tags:
+      - stock
+  /stock/recommendations:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves stock recommendations, optionally filtered by time
+      parameters:
+      - description: Time filter in YY/MM/DD format (e.g. '2025-03-31')
+        in: query
+        name: time
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.StockRecommendation'
+            type: array
+        "404":
+          description: No recommendations found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error getting recommendations
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get stock recommendations
+      tags:
+      - stock
+  /stock/sync:
+    post:
+      consumes:
+      - application/json
+      description: Synchronizes stocks from an external API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message and count
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error synchronizing stocks
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Synchronize stocks
+      tags:
+      - stock
+  /stock/ticker/{ticker}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves information for a specific stock by its ticker symbol
+      parameters:
+      - description: Stock ticker symbol (e.g. AAPL)
+        in: path
+        name: ticker
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/models.Stock'
+            type: object
+        "404":
+          description: Stock not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error getting stock by ticker
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get stock by ticker
+      tags:
+      - stock
 schemes:
 - http
 swagger: "2.0"

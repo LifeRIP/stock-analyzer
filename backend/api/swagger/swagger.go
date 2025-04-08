@@ -4,13 +4,14 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/liferip/stock-analyzer/backend/config"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 // RegisterSwaggerRoutes configura las rutas para Swagger UI
-func RegisterSwaggerRoutes(router *mux.Router, logger *zap.Logger) {
+func RegisterSwaggerRoutes(router *mux.Router, logger *zap.Logger, cfg *config.Config) {
 	logger.Info("Registering Swagger routes")
 
 	// Redirigir la ruta raíz a la documentación Swagger

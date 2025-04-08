@@ -23,6 +23,7 @@ type Config struct {
 	APIKey          string
 	ServerPort      string
 	Environment     string
+	SwaggerHost     string
 }
 
 // LoadConfig carga la configuración desde variables de entorno
@@ -41,6 +42,7 @@ func LoadConfig() (*Config, error) {
 		APIKey:          getEnv("API_KEY", "exampleApiKey"),
 		ServerPort:      getEnv("PORT", "8080"),
 		Environment:     getEnv("ENVIRONMENT", "development"),
+		SwaggerHost:     getEnv("SWAGGER_HOST", "localhost:8080"),
 	}, nil
 }
 

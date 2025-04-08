@@ -18,7 +18,256 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
-    "basePath": "/api/v1",
-    "paths": {}
+    "host": "stock-analyzer.ddns.net:8081",
+    "basePath": "/api",
+    "paths": {
+        "/stock": {
+            "get": {
+                "description": "Retrieves the complete list of available stocks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "Get all stocks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/models.Stock"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No stocks found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error getting stocks",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stock/recommendations": {
+            "get": {
+                "description": "Retrieves stock recommendations, optionally filtered by time",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "Get stock recommendations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Time filter in YY/MM/DD format (e.g. '2025-03-31')",
+                        "name": "time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.StockRecommendation"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No recommendations found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error getting recommendations",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stock/sync": {
+            "post": {
+                "description": "Synchronizes stocks from an external API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "Synchronize stocks",
+                "responses": {
+                    "200": {
+                        "description": "Success message and count",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error synchronizing stocks",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stock/ticker/{ticker}": {
+            "get": {
+                "description": "Retrieves information for a specific stock by its ticker symbol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "Get stock by ticker",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Stock ticker symbol (e.g. AAPL)",
+                        "name": "ticker",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/models.Stock"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Stock not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error getting stock by ticker",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Stock": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "brokerage": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rating_from": {
+                    "type": "string"
+                },
+                "rating_to": {
+                    "type": "string"
+                },
+                "target_from": {
+                    "type": "string"
+                },
+                "target_to": {
+                    "type": "string"
+                },
+                "ticker": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.StockRecommendation": {
+            "type": "object",
+            "properties": {
+                "potential_up": {
+                    "type": "number"
+                },
+                "reasons": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "score": {
+                    "type": "number"
+                },
+                "stock": {
+                    "$ref": "#/definitions/models.Stock"
+                }
+            }
+        }
+    }
 }

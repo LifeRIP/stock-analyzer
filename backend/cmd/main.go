@@ -27,21 +27,21 @@ import (
 	_ "github.com/liferip/stock-analyzer/backend/docs" // Importar documentos generados
 )
 
-// @title Stock Analyzer API
-// @version 1.0
-// @description API to analyze and manage stocks
-// @termsOfService http://swagger.io/terms/
+//	@title			Stock Analyzer API
+//	@version		1.0
+//	@description	API to analyze and manage stocks
+//	@termsOfService	http://swagger.io/terms/
 
-// @contact.name API Support
-// @contact.url http://www.example.com/support
-// @contact.email support@example.com
+//	@contact.name	API Support
+//	@contact.url	http://www.example.com/support
+//	@contact.email	support@example.com
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8080
-// @BasePath /api/v1
-// @schemes http
+//	@host		stock-analyzer.ddns.net:8081
+//	@BasePath	/api
+//	@schemes	http
 func main() {
 	fx.New(
 		// Incluir módulos
